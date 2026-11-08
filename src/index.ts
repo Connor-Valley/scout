@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { promises as dns, type MxRecord } from 'node:dns';
 
 const inputType = process.argv[2];
 const input = process.argv[3];
@@ -24,6 +25,16 @@ interface DomainSummary {
     registered: string;
     expires: string;
     nameservers: string;
+    address: string;
+    mx: string;
+    spf: string;
+    services: string;
+}
+
+interface DnsRecords {
+    a: string[];
+    mx: MxRecord[];
+    txt: string[];
 }
 
 function getEventDate(events: RdapEvent[], action: string) {
@@ -56,12 +67,35 @@ async function fetchDomain(domain: string): Promise<RdapDomain> {
     return (await response.json()) as RdapDomain;
 }
 
-function summarizeDomain(domain: string, data: RdapDomain): DomainSummary {
+async function fetchDns(domain: string): Promise<DnsRecords> {
+    const [a, mx, txt] = await Promise.all([
+        dns.resolve4(domain).catch(() => []),
+        dns.resolveMx(domain).catch(() => []),
+        dns.resolveTxt(domain).catch(() => [])
+    ]);
+
+    return {
+        a,
+        mx,
+        txt: txt.map((parts) => parts.join('')),
+    };
+}
+
+function stripSuffix(name: string) {
+    const suffixes = ['-domain-verification', '-site-verification', '-verification', '-smime-dv'];
+
+    for (const suffix of suffixes) {
+        if (name.endsWith(suffix)) {
+            return name.slice(0, -suffix.length);
+        }
+    }
+    return name;
+}
+
+function summarizeDomain(domain: string, data: RdapDomain, dns: DnsRecords): DomainSummary {
     const events = data.events;
     const registration = getEventDate(events, "registration");
-
     const expiration = getEventDate(events, "expiration");
-
     const nameservers = data.nameservers;
 
     let displayRegistrationDate;
@@ -75,16 +109,44 @@ function summarizeDomain(domain: string, data: RdapDomain): DomainSummary {
     const displayExpirationDate = expiration ? expiration.substring(0, 10) : "no expiration date found";
     const displayNameservers = nameservers?.map((ns) => ns.ldhName).join(', ') || "no nameservers found";
 
+    const address = dns.a[0] ?? 'no ip address found';
+    const mx = dns.mx[0]?.exchange ?? 'no mail server found';
+    const spf = dns.txt.find((record) => record.startsWith('v=spf1')) ?? 'no spf records found';
+    const serviceNames = dns.txt
+        .filter((record) => record.includes('='))
+        .filter((record) => !record.startsWith('v='))
+        .map((record) => record.split('=')[0] ?? '')
+        .map((name) => stripSuffix(name));
+
+    const services = [...new Set(serviceNames)].join(', ') || 'no services found';
+
     return {
         domain: domain,
         registered: displayRegistrationDate,
         expires: displayExpirationDate,
         nameservers: displayNameservers,
+        address: address,
+        mx: mx,
+        spf: spf,
+        services: services,
     };
 }
 
 function printDomainSummary(summary: DomainSummary) {
-    console.log(`\nDomain: ${summary.domain}\nRegistered: ${summary.registered}\nExpires:  ${summary.expires}\nNameservers: ${summary.nameservers}`);
+    const rows: [string, string][] = [
+        ['Domain', summary.domain],
+        ['Registered', summary.registered],
+        ['Expires', summary.expires],
+        ['Nameservers', summary.nameservers],
+        ['IPv4', summary.address],
+        ['Mail (MX)', summary.mx],
+        ['SPF', summary.spf],
+        ['Services', summary.services],
+    ];
+
+    for (const [label, value] of rows) {
+        console.log(`${label.padEnd(14)}${value}`);
+    }
 }
 
 
@@ -97,8 +159,8 @@ switch (inputType) {
     case '-d':
     case '--domain':
     case 'domain': {
-        const data = await fetchDomain(input);
-        const summary = summarizeDomain(input, data);
+        const [data, dns] = await Promise.all([fetchDomain(input), fetchDns(input)]);
+        const summary = summarizeDomain(input, data, dns);
         printDomainSummary(summary);
         break;
     }
