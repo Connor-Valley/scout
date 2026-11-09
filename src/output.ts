@@ -3,3 +3,7 @@ export function printRows(rows: [string, string][]) {
         console.log(`${label.padEnd(14)}${value}`);
     }
 }
+
+export function printJson(data: unknown) {
+    console.log(JSON.stringify(data, null, 2));
+}

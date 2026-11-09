@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { summarizeDomain } from './summary.js';
+import {summarizeDomain, domainRows, type DomainSummary} from './summary.js';
 import { type RdapDomain } from './rdap.js';
 import { type DnsRecords } from './dns.js';
 
@@ -36,13 +36,14 @@ describe('summarizeDomain', () => {
 
         expect(summary).toEqual({
             domain: 'example.com',
-            registered: '2010-05-01 (15 years ago)',
+            registered: '2010-05-01',
+            ageYears: 15,
             expires: '2030-05-01',
-            nameservers: 'NS1.EXAMPLE.COM',
-            address: '93.184.216.34',
-            mx: 'mail.example.com',
+            nameservers: ['NS1.EXAMPLE.COM'],
+            ipv4: ['93.184.216.34'],
+            mx: ['mail.example.com'],
             spf: 'v=spf1 include:_spf.example.com ~all',
-            services: 'google, facebook, docusign'
+            services: ['docusign', 'facebook', 'google'],
         })
     });
 
@@ -51,56 +52,120 @@ describe('summarizeDomain', () => {
        vi.setSystemTime(date);
        const summary = summarizeDomain('example.com', baseRdap, baseDns);
 
-       expect(summary.registered).toEqual('2010-05-01 (16 years ago)');
+       expect(summary.ageYears).toBe(16);
     });
 
     it('uses a fallback when there are no nameservers', () => {
         const rdap = { ...baseRdap, nameservers: []};
         const summary = summarizeDomain('example.com', rdap, baseDns);
 
-        expect(summary.nameservers).toBe('no nameservers found');
+        expect(summary.nameservers).toEqual([]);
     });
 
     it('uses a fallback when nameservers is undefined', () => {
         const rdap = { ...baseRdap, nameservers: undefined };
         const summary = summarizeDomain('example.com', rdap, baseDns);
 
-        expect(summary.nameservers).toBe('no nameservers found');
+        expect(summary.nameservers).toEqual([]);
     })
 
     it('uses a fallback when there are no events', () => {
         const rdap = { ...baseRdap, events: [] };
         const summary = summarizeDomain('example.com', rdap, baseDns);
 
-        expect(summary.registered).toBe('no registration date found');
-        expect(summary.expires).toBe('no expiration date found');
+        expect(summary.registered).toBeNull();
+        expect(summary.expires).toBeNull();
+        expect(summary.ageYears).toBeNull();
     });
 
     it('uses a fallback when there is no ip address', () => {
         const dns = { ...baseDns, a: [] };
         const summary = summarizeDomain('example.com', baseRdap, dns);
 
-        expect(summary.address).toBe('no ip address found');
+        expect(summary.ipv4).toEqual([]);
     });
 
     it('uses a fallback when there is no mail server', () => {
         const dns = { ...baseDns, mx: [] };
         const summary = summarizeDomain('example.com', baseRdap, dns);
 
-        expect(summary.mx).toBe('no mail server found');
+        expect(summary.mx).toEqual([]);
     });
 
     it('uses a fallback when there are no services', () => {
         const dns = { ...baseDns, txt: [] };
         const summary = summarizeDomain('example.com', baseRdap, dns);
 
-        expect(summary.spf).toBe('no spf records found');
-        expect(summary.services).toBe('no services found');
+        expect(summary.spf).toBeNull();
+        expect(summary.services).toEqual([]);
     });
 
     it('correctly strips suffixes from services', () => {
         const summary = summarizeDomain('example.com', baseRdap, baseDns);
 
-        expect(summary.services).toBe('google, facebook, docusign');
+        expect(summary.services).toEqual(['docusign', 'facebook', 'google']);
+    });
+
+    it('correctly sorts services', () => {
+        const dns = {...baseDns, txt: ['MS=abc', 'apple-domain-verification=x', 'zoom-domain-verification=y']}
+        const summary = summarizeDomain('example.com', baseRdap, dns);
+
+        expect(summary.services).toEqual(['apple', 'MS', 'zoom']);
+    });
+});
+
+describe('domainRows', () => {
+    it('correctly parses domain rows', () => {
+        const summary: DomainSummary = {
+            domain: 'example.com',
+            registered: '2010-05-01',
+            ageYears: 15,
+            expires: '2030-05-01',
+            nameservers: ['NS1.EXAMPLE.COM', 'NS2.EXAMPLE.COM'],
+            ipv4: ['93.184.216.34'],
+            mx: ['mail.example.com'],
+            spf: 'v=spf1 include:_spf.example.com ~all',
+            services: ['google', 'facebook', 'docusign']
+        };
+
+        const rows = domainRows(summary);
+
+        expect(rows).toEqual([
+            ['Domain', 'example.com'],
+            ['Registered', '2010-05-01 (15 years ago)'],
+            ['Expires', '2030-05-01'],
+            ['Nameservers', 'NS1.EXAMPLE.COM, NS2.EXAMPLE.COM'],
+            ['IPv4', '93.184.216.34'],
+            ['Mail (MX)', 'mail.example.com'],
+            ['SPF', 'v=spf1 include:_spf.example.com ~all'],
+            ['Services', 'google, facebook, docusign'],
+        ])
+    })
+
+    it('correctly handles missing values', () => {
+        const summary: DomainSummary = {
+            domain: 'example.com',
+            registered: null,
+            ageYears: null,
+            expires: null,
+            nameservers: [],
+            ipv4: [],
+            mx: [],
+            spf: null,
+            services: []
+        };
+
+        const rows = domainRows(summary);
+
+        expect(rows).toEqual([
+            ['Domain', 'example.com'],
+            ['Registered', 'no registration date found'],
+            ['Expires', 'no expiration date found'],
+            ['Nameservers', 'no nameservers found'],
+            ['IPv4', 'no ip address found'],
+            ['Mail (MX)', 'no mail server found'],
+            ['SPF', 'no SPF records found'],
+            ['Services', 'no services found'],
+        ]);
     });
 });

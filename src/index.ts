@@ -2,26 +2,38 @@
 import { fetchDomain } from './domain/rdap.js'
 import { fetchDns } from './domain/dns.js'
 import { summarizeDomain, domainRows } from './domain/summary.js'
-import { printRows } from './output.js'
+import { printRows, printJson } from './output.js'
+import { parseArgs } from 'node:util';
 
-const inputType = process.argv[2];
-const input = process.argv[3];
+const usageMessage = 'Usage: scout -d <domain> [--json]';
 
-if (!inputType || !input) {
-    console.error('Usage: scout <type> <input>');
-    process.exit(1);
+function parseCliArgs() {
+    try {
+        const { values } = parseArgs({
+            options: {
+                domain: { type: 'string', short: 'd' },
+                json: { type: 'boolean' },
+            },
+        });
+        return values;
+    } catch {
+        console.error(usageMessage);
+        process.exit(1);
+    }
 }
 
-switch (inputType) {
-    case '-d':
-    case '--domain':
-    case 'domain': {
-        const [data, dns] = await Promise.all([fetchDomain(input), fetchDns(input)]);
-        const summary = summarizeDomain(input, data, dns);
+const values = parseCliArgs();
+
+
+if (values.domain) {
+    const [data, dns] = await Promise.all([fetchDomain(values.domain), fetchDns(values.domain)]);
+    const summary = summarizeDomain(values.domain, data, dns);
+    if (values.json) {
+        printJson(summary);
+    } else {
         printRows(domainRows(summary));
-        break;
     }
-    default:
-        console.error(`Unknown type: ${inputType}`);
-        process.exit(1);
+} else {
+    console.error(usageMessage);
+    process.exit(1);
 }
