@@ -8,13 +8,14 @@
     CLI for looking up domains, phone numbers, etc. 
   </p>
 
-
 <!-- About the Project -->
 ## :star2: About the Project
-Osint CLI for doing recon on a domain, phone number, etc. Provides either pretty print or JSON for scripting or quick one-off usage. More to come. Vibe-code free.
+OSINT CLI for doing recon on a domain, phone number, etc. Provides either pretty print or JSON for scripting or quick one-off usage. More to come. Vibe-code free.
+
+</div>
 
 <!-- Features -->
-### :dart: Features
+## :dart: Features
 
 - Lookup domain information
 - Pretty print or JSON
