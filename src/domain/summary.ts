@@ -27,6 +27,21 @@ function stripSuffix(name: string) {
     return name;
 }
 
+function yearsSince(date: Date): number {
+    const now = new Date();
+    let years = now.getFullYear() - date.getFullYear();
+
+    const anniversaryPast =
+        now.getMonth() > date.getMonth() ||
+        (now.getMonth() === date.getMonth() && now.getDate() >= date.getDate());
+
+    if (!anniversaryPast) {
+        years -= 1;
+    }
+
+    return years;
+}
+
 export function summarizeDomain(domain: string, data: RdapDomain, dns: DnsRecords): DomainSummary {
     const events = data.events;
     const registration = getEventDate(events, "registration");
@@ -35,9 +50,7 @@ export function summarizeDomain(domain: string, data: RdapDomain, dns: DnsRecord
 
     let displayRegistrationDate;
     if (registration) {
-        const registrationYear = new Date(registration).getFullYear();
-        const nowYear = (new Date()).getFullYear();
-        displayRegistrationDate = registration.substring(0, 10) + " " + `(${nowYear - registrationYear} years ago)`;
+        displayRegistrationDate = registration.substring(0, 10) + " " + `(${yearsSince(new Date(registration))} years ago)`;
     } else {
         displayRegistrationDate = "no registration date found"
     }
