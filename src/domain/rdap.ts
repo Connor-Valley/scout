@@ -1,17 +1,23 @@
-export interface RdapEvent {
-    eventAction: string;
-    eventDate: string;
-}
+import * as z from "zod";
 
-export interface RdapDomain {
-    ldhName: string;
-    events: RdapEvent[];
-    nameservers?: RdapNameserver[];
-}
+const RdapEventSchema = z.object({
+    eventAction: z.string(),
+    eventDate: z.string(),
+});
 
-export interface RdapNameserver {
-    ldhName: string;
-}
+export type RdapEvent = z.infer<typeof RdapEventSchema>;
+
+const RdapNameserverSchema = z.object({
+    ldhName: z.string(),
+});
+
+const RdapDomainSchema = z.object({
+    ldhName: z.string(),
+    events: z.array(RdapEventSchema),
+    nameservers: z.array(RdapNameserverSchema).optional(),
+});
+
+export type RdapDomain = z.infer<typeof RdapDomainSchema>;
 
 export async function fetchDomain(domain: string): Promise<RdapDomain> {
     const url = `https://rdap.org/domain/${domain}`;
@@ -36,5 +42,13 @@ export async function fetchDomain(domain: string): Promise<RdapDomain> {
         process.exit(1);
     }
 
-    return (await response.json()) as RdapDomain;
+    const json = await response.json();
+    const result = RdapDomainSchema.safeParse(json);
+
+    if (!result.success) {
+        console.error("Unexpected result from Rdap:\n", z.prettifyError(result.error));
+        process.exit(1);
+    }
+
+    return result.data;
 }
