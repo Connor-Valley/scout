@@ -21,7 +21,7 @@ export function summarizePhone(input: string): PhoneSummary | null {
 
     return {
         input,
-        country: phone.country ?? null,
+        country: phone.isValid() ? (phone.country ?? null) : null,
         national: phone.formatNational(),
         international: phone.formatInternational(),
         e164: phone.number,
