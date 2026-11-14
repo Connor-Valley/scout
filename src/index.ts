@@ -3,28 +3,20 @@ import { fetchDomain } from './domain/rdap.js';
 import { fetchDns } from './domain/dns.js';
 import { summarizeDomain, domainRows } from './domain/summary.js';
 import { printRows, printJson } from './output.js';
-import { parseArgs } from 'node:util';
 import { summarizePhone, phoneRows } from './phone/summary.js';
+import { parseCliArgs, printHelp, USAGE } from "./cli.js";
 
-const usageMessage = 'Usage: scout -d <domain> | -p <phone> [--json]';
+const { values, positionals } = parseCliArgs();
 
-function parseCliArgs() {
-    try {
-        const { values } = parseArgs({
-            options: {
-                domain: { type: 'string', short: 'd' },
-                phone: { type: 'string', short: 'p' },
-                json: { type: 'boolean' },
-            },
-        });
-        return values;
-    } catch {
-        console.error(usageMessage);
-        process.exit(1);
-    }
+if (values.help) {
+    printHelp();
+    process.exit(0);
 }
 
-const values = parseCliArgs();
+if (positionals.length > 0) {
+    console.error(`Got extra arguments: ${positionals.join(' ')}. Did you forget quotes around the number?`);
+    process.exit(1);
+}
 
 if (values.domain) {
     const [data, dns] = await Promise.all([fetchDomain(values.domain), fetchDns(values.domain)]);
@@ -47,6 +39,6 @@ if (values.domain) {
     }
 
 } else {
-    console.error(usageMessage);
+    console.error(USAGE);
     process.exit(1);
 }
