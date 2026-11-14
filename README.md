@@ -7,6 +7,9 @@
     CLI for looking up domains, phone numbers, etc.
   </p>
 
+  [![Node.js CI](https://github.com/Connor-Valley/scout/actions/workflows/node.js.yml/badge.svg)](https://github.com/Connor-Valley/scout/actions/workflows/node.js.yml)
+
+
 </div>
 
 <!-- About the Project -->
