@@ -1,9 +1,11 @@
-export function printRows(rows: [string, string][]) {
+export function formatRows(rows: [string, string][]): string[] {
     const labelWidth = Math.max(...rows.map(([label]) => label.length)) + 2;
 
-    for (const [label, value] of rows) {
-        console.log(`${label.padEnd(labelWidth)}${value}`);
-    }
+    return rows.map(([label, value]) => `${label.padEnd(labelWidth)}${value}`);
+}
+
+export function printRows(rows: [string, string][]) {
+    formatRows(rows).forEach((line) => console.log(line))
 }
 
 export function printJson(data: unknown) {
