@@ -5,6 +5,7 @@ import { summarizePhone, phoneRows } from './phone/summary.js';
 import { parseCliArgs, printHelp, USAGE } from "./cli.js";
 import { lookupDomain } from './domain/lookup.js'
 import { ScoutError } from "./errors.js";
+import * as z from "zod"
 
 const { values, positionals } = parseCliArgs();
 
@@ -26,6 +27,14 @@ if (values.domain) {
     } catch (error) {
         if (error instanceof ScoutError) {
             console.error(error.message);
+            if (values.debug && error.cause) {
+                console.error('\nCause:');
+                if (error.cause instanceof z.ZodError) {
+                    console.error(z.prettifyError(error.cause));
+                } else {
+                    console.error(error.cause);
+                }
+            }
             process.exit(1);
         }
         throw error;

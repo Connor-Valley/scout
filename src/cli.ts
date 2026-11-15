@@ -23,6 +23,7 @@ Flags:
   -d, --domain <domain>   Look up registration and DNS info for a domain
   -p, --phone <phone>     Look up info for a phone number
       --json              Print results as JSON
+      --debug             Print full error details on failure
   -h, --help              Show this help
 `.trim();
 
@@ -34,6 +35,7 @@ export function parseCliArgs() {
                 phone: { type: 'string', short: 'p' },
                 json: { type: 'boolean' },
                 help: { type: 'boolean', short: 'h' },
+                debug: { type: 'boolean' },
             },
             allowPositionals: true,
         });
