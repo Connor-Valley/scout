@@ -8,6 +8,7 @@ export interface DomainSummary {
     expires: string | null;
     nameservers: string[];
     ipv4: string[];
+    ipv6: string[];
     mx: string[];
     spf: string | null;
     dmarc: string | null;
@@ -64,6 +65,7 @@ export function summarizeDomain(domain: string, data: RdapDomain, dns: DnsRecord
         expires: expiration?.substring(0, 10) ?? null,
         nameservers: data.nameservers?.map((ns) => ns.ldhName) ?? [],
         ipv4: dns.a,
+        ipv6: dns.aaaa,
         mx: dns.mx.toSorted((a, b) => a.priority - b.priority).map((record) => record.exchange),
         spf: dns.txt.find((record) => record.startsWith('v=spf1')) ?? null,
         dmarc: dmarc ?? null,
@@ -86,7 +88,8 @@ export function domainRows(summary: DomainSummary): [string, string][] {
         ['Registered', registered],
         ['Expires', summary.expires ?? 'no expiration date found'],
         ['Nameservers', summary.nameservers.join(', ') || 'no nameservers found'],
-        ['IPv4', summary.ipv4[0] || 'no ip address found'],
+        ['IPv4', summary.ipv4.join(', ') || 'no IPv4 found'],
+        ['IPv6', summary.ipv6.join(', ') || 'no IPv6 found'],
         ['Mail (MX)', summary.mx.join(', ') || 'no mail server found'],
         ['SPF', summary.spf ?? 'no SPF records found'],
         ['DMARC', summary.dmarc ?? 'no DMARC records found'],

@@ -15,7 +15,8 @@ const baseRdap: RdapDomain = {
 };
 
 const baseDns: DnsRecords = {
-    a: ['93.184.216.34'],
+    a: ['93.184.216.34', '192.0.2.10'],
+    aaaa: ['2607:f8b0:4009:81c::200e', '2001:db8::1'],
     mx: [{ exchange: 'mail.example.com', priority: 10 }],
     txt: [
         'v=spf1 include:_spf.example.com ~all',      // SPF, should be excluded from services
@@ -41,7 +42,8 @@ describe('summarizeDomain', () => {
             ageYears: 15,
             expires: '2030-05-01',
             nameservers: ['NS1.EXAMPLE.COM'],
-            ipv4: ['93.184.216.34'],
+            ipv4: ['93.184.216.34', '192.0.2.10'],
+            ipv6: ['2607:f8b0:4009:81c::200e', '2001:db8::1'],
             mx: ['mail.example.com'],
             spf: 'v=spf1 include:_spf.example.com ~all',
             dmarc: 'v=DMARC1; p=reject; rua=mailto:reports@example.com',
@@ -81,12 +83,19 @@ describe('summarizeDomain', () => {
         expect(summary.ageYears).toBeNull();
     });
 
-    it('uses a fallback when there is no ip address', () => {
+    it('uses a fallback when there is no ipv4 address', () => {
         const dns = { ...baseDns, a: [] };
         const summary = summarizeDomain('example.com', baseRdap, dns);
 
         expect(summary.ipv4).toEqual([]);
     });
+
+    it('uses a fallback when there is no ipv6 address', () => {
+        const dns = { ...baseDns, aaaa: [] };
+        const summary = summarizeDomain('example.com', baseRdap, dns);
+
+        expect(summary.ipv6).toEqual([]);
+    })
 
     it('uses a fallback when there is no mail server', () => {
         const dns = { ...baseDns, mx: [] };
@@ -162,7 +171,8 @@ describe('domainRows', () => {
             ageYears: 15,
             expires: '2030-05-01',
             nameservers: ['NS1.EXAMPLE.COM', 'NS2.EXAMPLE.COM'],
-            ipv4: ['93.184.216.34'],
+            ipv4: ['93.184.216.34', '192.0.2.10'],
+            ipv6: ['2607:f8b0:4009:81c::200e','2001:db8::1'],
             mx: ['mail.example.com'],
             spf: 'v=spf1 include:_spf.example.com ~all',
             dmarc: 'v=DMARC1; p=reject; rua=mailto:reports@example.com',
@@ -177,7 +187,8 @@ describe('domainRows', () => {
             ['Registered', '2010-05-01 (15 years ago)'],
             ['Expires', '2030-05-01'],
             ['Nameservers', 'NS1.EXAMPLE.COM, NS2.EXAMPLE.COM'],
-            ['IPv4', '93.184.216.34'],
+            ['IPv4', '93.184.216.34, 192.0.2.10'],
+            ['IPv6', '2607:f8b0:4009:81c::200e, 2001:db8::1'],
             ['Mail (MX)', 'mail.example.com'],
             ['SPF', 'v=spf1 include:_spf.example.com ~all'],
             ['DMARC', 'v=DMARC1; p=reject; rua=mailto:reports@example.com'],
@@ -194,6 +205,7 @@ describe('domainRows', () => {
             expires: null,
             nameservers: [],
             ipv4: [],
+            ipv6: [],
             mx: [],
             spf: null,
             dmarc: null,
@@ -208,7 +220,8 @@ describe('domainRows', () => {
             ['Registered', 'no registration date found'],
             ['Expires', 'no expiration date found'],
             ['Nameservers', 'no nameservers found'],
-            ['IPv4', 'no ip address found'],
+            ['IPv4', 'no IPv4 found'],
+            ['IPv6', 'no IPv6 found'],
             ['Mail (MX)', 'no mail server found'],
             ['SPF', 'no SPF records found'],
             ['DMARC', 'no DMARC records found'],
