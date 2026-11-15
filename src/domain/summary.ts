@@ -10,6 +10,8 @@ export interface DomainSummary {
     ipv4: string[];
     mx: string[];
     spf: string | null;
+    dmarc: string | null;
+    dmarcPolicy: string | null;
     services: string[];
 }
 
@@ -53,6 +55,8 @@ export function summarizeDomain(domain: string, data: RdapDomain, dns: DnsRecord
         .map((record) => record.split('=')[0] ?? '')
         .map((name) => stripSuffix(name));
 
+    const dmarc = dns.dmarc.find((record) => record.startsWith('v=DMARC1'));
+
     return {
         domain: domain,
         registered: registration?.substring(0, 10) ?? null,
@@ -62,6 +66,12 @@ export function summarizeDomain(domain: string, data: RdapDomain, dns: DnsRecord
         ipv4: dns.a,
         mx: dns.mx.toSorted((a, b) => a.priority - b.priority).map((record) => record.exchange),
         spf: dns.txt.find((record) => record.startsWith('v=spf1')) ?? null,
+        dmarc: dmarc ?? null,
+        dmarcPolicy: dmarc
+            ?.split(';')
+            .map((tag) => tag.trim())
+            .find((tag) => tag.startsWith('p='))
+            ?.slice(2) ?? null,
         services: [...new Set(serviceNames)].sort((a, b) => a.localeCompare(b)),
     };
 }
@@ -79,6 +89,8 @@ export function domainRows(summary: DomainSummary): [string, string][] {
         ['IPv4', summary.ipv4[0] || 'no ip address found'],
         ['Mail (MX)', summary.mx.join(', ') || 'no mail server found'],
         ['SPF', summary.spf ?? 'no SPF records found'],
+        ['DMARC', summary.dmarc ?? 'no DMARC records found'],
+        ['DMARC Policy', summary.dmarcPolicy ?? 'no DMARC policy found'],
         ['Services', summary.services.join(', ') || 'no services found'],
     ];
 }

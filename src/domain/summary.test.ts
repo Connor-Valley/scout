@@ -25,6 +25,7 @@ const baseDns: DnsRecords = {
         'docusign=11111111-2222',                    // no suffix at all
         'randomtoken12345',                          // no "=", should be ignored
     ],
+    dmarc: ['v=DMARC1; p=reject; rua=mailto:reports@example.com'],
 };
 
 afterEach(() => vi.useRealTimers());
@@ -43,6 +44,8 @@ describe('summarizeDomain', () => {
             ipv4: ['93.184.216.34'],
             mx: ['mail.example.com'],
             spf: 'v=spf1 include:_spf.example.com ~all',
+            dmarc: 'v=DMARC1; p=reject; rua=mailto:reports@example.com',
+            dmarcPolicy: 'reject',
             services: ['docusign', 'facebook', 'google'],
         })
     });
@@ -100,6 +103,30 @@ describe('summarizeDomain', () => {
         expect(summary.services).toEqual([]);
     });
 
+    it('correctly handles no DMARC records', () => {
+        const dns = { ...baseDns, dmarc: [] };
+        const summary = summarizeDomain('example.com', baseRdap, dns);
+
+        expect(summary.dmarc).toBeNull();
+        expect(summary.dmarcPolicy).toBeNull();
+    });
+
+    it('correctly handles no DMARC policy', () => {
+        const dns = { ...baseDns, dmarc: ['v=DMARC1; rua=mailto:reports@example.com'] };
+        const summary = summarizeDomain('example.com', baseRdap, dns);
+
+        expect(summary.dmarc).toBe('v=DMARC1; rua=mailto:reports@example.com');
+        expect(summary.dmarcPolicy).toBeNull();
+    });
+
+    it('correctly handles sp= in DMARC', () => {
+       const dns = { ...baseDns, dmarc: ['v=DMARC1; sp=none; p=reject'] };
+       const summary = summarizeDomain('example.com', baseRdap, dns);
+
+       expect(summary.dmarc).toBe('v=DMARC1; sp=none; p=reject');
+       expect(summary.dmarcPolicy).toBe('reject');
+    });
+
     it('correctly strips suffixes from services', () => {
         const summary = summarizeDomain('example.com', baseRdap, baseDns);
 
@@ -138,6 +165,8 @@ describe('domainRows', () => {
             ipv4: ['93.184.216.34'],
             mx: ['mail.example.com'],
             spf: 'v=spf1 include:_spf.example.com ~all',
+            dmarc: 'v=DMARC1; p=reject; rua=mailto:reports@example.com',
+            dmarcPolicy: 'reject',
             services: ['google', 'facebook', 'docusign']
         };
 
@@ -151,6 +180,8 @@ describe('domainRows', () => {
             ['IPv4', '93.184.216.34'],
             ['Mail (MX)', 'mail.example.com'],
             ['SPF', 'v=spf1 include:_spf.example.com ~all'],
+            ['DMARC', 'v=DMARC1; p=reject; rua=mailto:reports@example.com'],
+            ['DMARC Policy', 'reject'],
             ['Services', 'google, facebook, docusign'],
         ])
     })
@@ -165,6 +196,8 @@ describe('domainRows', () => {
             ipv4: [],
             mx: [],
             spf: null,
+            dmarc: null,
+            dmarcPolicy: null,
             services: []
         };
 
@@ -178,6 +211,8 @@ describe('domainRows', () => {
             ['IPv4', 'no ip address found'],
             ['Mail (MX)', 'no mail server found'],
             ['SPF', 'no SPF records found'],
+            ['DMARC', 'no DMARC records found'],
+            ['DMARC Policy', 'no DMARC policy found'],
             ['Services', 'no services found'],
         ]);
     });
