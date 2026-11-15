@@ -33,11 +33,11 @@ function stripSuffix(name: string) {
 
 function yearsSince(date: Date): number {
     const now = new Date();
-    let years = now.getFullYear() - date.getFullYear();
+    let years = now.getUTCFullYear() - date.getUTCFullYear();
 
     const anniversaryPast =
-        now.getMonth() > date.getMonth() ||
-        (now.getMonth() === date.getMonth() && now.getDate() >= date.getDate());
+        now.getUTCMonth() > date.getUTCMonth() ||
+        (now.getUTCMonth() === date.getUTCMonth() && now.getUTCDate() >= date.getUTCDate());
 
     if (!anniversaryPast) {
         years -= 1;

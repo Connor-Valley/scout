@@ -60,6 +60,14 @@ describe('summarizeDomain', () => {
        expect(summary.ageYears).toBe(16);
     });
 
+    it('uses UTC dates, not local time, near the anniversary', () => {
+        const now = new Date('2026-04-30T23:00:00Z');
+        vi.setSystemTime(now);
+        const summary = summarizeDomain('example.com', baseRdap, baseDns);
+
+        expect(summary.ageYears).toBe(15);
+    });
+
     it('uses a fallback when there are no nameservers', () => {
         const rdap = { ...baseRdap, nameservers: []};
         const summary = summarizeDomain('example.com', rdap, baseDns);
