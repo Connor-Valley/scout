@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import { fetchDomain } from './domain/rdap.js';
-import { fetchDns } from './domain/dns.js';
-import { summarizeDomain, domainRows } from './domain/summary.js';
+import {domainRows, type DomainSummary} from './domain/summary.js';
 import { printRows, printJson } from './output.js';
 import { summarizePhone, phoneRows } from './phone/summary.js';
 import { parseCliArgs, printHelp, USAGE } from "./cli.js";
+import { lookupDomain } from './domain/lookup.js'
+import { ScoutError } from "./errors.js";
 
 const { values, positionals } = parseCliArgs();
 
@@ -19,8 +19,18 @@ if (positionals.length > 0) {
 }
 
 if (values.domain) {
-    const [data, dns] = await Promise.all([fetchDomain(values.domain), fetchDns(values.domain)]);
-    const summary = summarizeDomain(values.domain, data, dns);
+    let summary: DomainSummary;
+
+    try {
+        summary = await lookupDomain(values.domain);
+    } catch (error) {
+        if (error instanceof ScoutError) {
+            console.error(error.message);
+            process.exit(1);
+        }
+        throw error;
+    }
+
     if (values.json) {
         printJson(summary);
     } else {

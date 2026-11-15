@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { ScoutError } from "../errors.js";
 
 const RdapEventSchema = z.object({
     eventAction: z.string(),
@@ -30,24 +31,20 @@ export async function fetchDomain(domain: string): Promise<RdapDomain> {
             }
         });
     } catch (error) {
-        console.error("Client is offline");
-        process.exit(1);
+        throw new ScoutError("Couldn't reach the lookup service. Check your connection.", { cause: error });
     }
 
     if (response.status === 404) {
-        console.error("Domain not found");
-        process.exit(1);
+        throw new ScoutError(`Domain not found: ${domain}`);
     } else if (!response.ok) {
-        console.error("Domain lookup error:", response.status);
-        process.exit(1);
+        throw new ScoutError(`Domain lookup error (HTTP: ${response.status})`);
     }
 
     const json = await response.json();
     const result = RdapDomainSchema.safeParse(json);
 
     if (!result.success) {
-        console.error("Unexpected result from Rdap:\n", z.prettifyError(result.error));
-        process.exit(1);
+        throw new ScoutError("Unexpected result from RDAP", { cause: result.error });
     }
 
     return result.data;
