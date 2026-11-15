@@ -112,6 +112,19 @@ describe('summarizeDomain', () => {
 
         expect(summary.services).toEqual(['apple', 'MS', 'zoom']);
     });
+
+    it('correctly sorts mx servers', () => {
+        const dns = {...baseDns, mx:
+                [
+                    { exchange: 'slow-mail.example.com', priority: 20 },
+                    { exchange: 'priority-mail.example.com', priority: 5 },
+                    { exchange: 'mail.example.com', priority: 10 }
+                ]
+        };
+        const summary = summarizeDomain('example.com', baseRdap, dns);
+
+        expect(summary.mx).toEqual(['priority-mail.example.com', 'mail.example.com', 'slow-mail.example.com']);
+    });
 });
 
 describe('domainRows', () => {

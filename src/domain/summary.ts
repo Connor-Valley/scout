@@ -60,7 +60,7 @@ export function summarizeDomain(domain: string, data: RdapDomain, dns: DnsRecord
         expires: expiration?.substring(0, 10) ?? null,
         nameservers: data.nameservers?.map((ns) => ns.ldhName) ?? [],
         ipv4: dns.a,
-        mx: dns.mx.map((record) => record.exchange),
+        mx: dns.mx.toSorted((a, b) => a.priority - b.priority).map((record) => record.exchange),
         spf: dns.txt.find((record) => record.startsWith('v=spf1')) ?? null,
         services: [...new Set(serviceNames)].sort((a, b) => a.localeCompare(b)),
     };
@@ -77,7 +77,7 @@ export function domainRows(summary: DomainSummary): [string, string][] {
         ['Expires', summary.expires ?? 'no expiration date found'],
         ['Nameservers', summary.nameservers.join(', ') || 'no nameservers found'],
         ['IPv4', summary.ipv4[0] || 'no ip address found'],
-        ['Mail (MX)', summary.mx[0] || 'no mail server found'],
+        ['Mail (MX)', summary.mx.join(', ') || 'no mail server found'],
         ['SPF', summary.spf ?? 'no SPF records found'],
         ['Services', summary.services.join(', ') || 'no services found'],
     ];
