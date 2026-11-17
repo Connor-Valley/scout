@@ -1,4 +1,5 @@
-import {parsePhoneNumberFromString, type CountryCode, type PhoneNumberType} from 'libphonenumber-js/max';
+import { parsePhoneNumberFromString, type CountryCode, type PhoneNumberType } from 'libphonenumber-js/max';
+import { type Row, row } from '../output.js';
 
 export interface PhoneSummary {
     input: string;
@@ -31,15 +32,15 @@ export function summarizePhone(input: string): PhoneSummary | null {
     }
 }
 
-export function phoneRows(summary: PhoneSummary): [string, string][] {
+export function phoneRows(summary: PhoneSummary): Row[] {
     return [
-        ['Input', summary.input],
-        ['Country', summary.country ?? 'no country found'],
+        ['Input', summary.input, 'title'],
+        row('Country', summary.country, 'no country found'),
         ['National', summary.national],
         ['International', summary.international],
         ['E164', summary.e164],
         ['Possible', summary.isPossible ? 'Yes' : 'No'],
         ['Valid', summary.isValid ? 'Yes' : 'No'],
-        ['Type', summary.type?.replaceAll('_', ' ').toLowerCase() ?? 'no type found']
+        row('Type', summary.type?.replaceAll('_', ' ').toLowerCase() ?? null, 'no type found')
     ]
 }

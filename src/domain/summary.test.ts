@@ -191,7 +191,7 @@ describe('domainRows', () => {
         const rows = domainRows(summary);
 
         expect(rows).toEqual([
-            ['Domain', 'example.com'],
+            ['Domain', 'example.com', 'title'],
             ['Registered', '2010-05-01 (15 years ago)'],
             ['Expires', '2030-05-01'],
             ['Nameservers', 'NS1.EXAMPLE.COM, NS2.EXAMPLE.COM'],
@@ -224,17 +224,17 @@ describe('domainRows', () => {
         const rows = domainRows(summary);
 
         expect(rows).toEqual([
-            ['Domain', 'example.com'],
-            ['Registered', 'no registration date found'],
-            ['Expires', 'no expiration date found'],
-            ['Nameservers', 'no nameservers found'],
-            ['IPv4', 'no IPv4 found'],
-            ['IPv6', 'no IPv6 found'],
-            ['Mail (MX)', 'no mail server found'],
-            ['SPF', 'no SPF records found'],
-            ['DMARC', 'no DMARC records found'],
-            ['DMARC Policy', 'no DMARC policy found'],
-            ['Services', 'no services found'],
+            ['Domain', 'example.com', 'title'],
+            ['Registered', 'no registration date found', 'missing'],
+            ['Expires', 'no expiration date found', 'missing'],
+            ['Nameservers', 'no nameservers found', 'missing'],
+            ['IPv4', 'no IPv4 found', 'missing'],
+            ['IPv6', 'no IPv6 found', 'missing'],
+            ['Mail (MX)', 'no mail server found', 'missing'],
+            ['SPF', 'no SPF records found', 'missing'],
+            ['DMARC', 'no DMARC records found', 'missing'],
+            ['DMARC Policy', 'no DMARC policy found', 'missing'],
+            ['Services', 'no services found', 'missing'],
         ]);
     });
 });

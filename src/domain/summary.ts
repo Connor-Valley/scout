@@ -1,5 +1,6 @@
 import { type RdapDomain, type RdapEvent } from './rdap.js';
 import { type DnsRecords } from './dns.js';
+import { type Row, row } from '../output.js';
 
 export interface DomainSummary {
     domain: string;
@@ -78,22 +79,18 @@ export function summarizeDomain(domain: string, data: RdapDomain, dns: DnsRecord
     };
 }
 
-export function domainRows(summary: DomainSummary): [string, string][] {
-    const registered = summary.registered
-        ? `${summary.registered} (${summary.ageYears} years ago)`
-        : 'no registration date found';
-
+export function domainRows(summary: DomainSummary): Row[] {
     return [
-        ['Domain', summary.domain],
-        ['Registered', registered],
-        ['Expires', summary.expires ?? 'no expiration date found'],
-        ['Nameservers', summary.nameservers.join(', ') || 'no nameservers found'],
-        ['IPv4', summary.ipv4.join(', ') || 'no IPv4 found'],
-        ['IPv6', summary.ipv6.join(', ') || 'no IPv6 found'],
-        ['Mail (MX)', summary.mx.join(', ') || 'no mail server found'],
-        ['SPF', summary.spf ?? 'no SPF records found'],
-        ['DMARC', summary.dmarc ?? 'no DMARC records found'],
-        ['DMARC Policy', summary.dmarcPolicy ?? 'no DMARC policy found'],
-        ['Services', summary.services.join(', ') || 'no services found'],
+        ['Domain', summary.domain, 'title'],
+        row('Registered', summary.registered && `${summary.registered} (${summary.ageYears} years ago)`, 'no registration date found'),
+        row('Expires', summary.expires, 'no expiration date found'),
+        row('Nameservers', summary.nameservers.join(', '), 'no nameservers found'),
+        row('IPv4', summary.ipv4.join(', '), 'no IPv4 found'),
+        row('IPv6', summary.ipv6.join(', '), 'no IPv6 found'),
+        row('Mail (MX)', summary.mx.join(', '), 'no mail server found'),
+        row('SPF', summary.spf, 'no SPF records found'),
+        row('DMARC', summary.dmarc, 'no DMARC records found'),
+        row('DMARC Policy', summary.dmarcPolicy, 'no DMARC policy found'),
+        row('Services', summary.services.join(', '), 'no services found'),
     ];
 }

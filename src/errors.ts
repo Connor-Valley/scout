@@ -1,12 +1,13 @@
 import * as z from 'zod';
+import { type Style } from './output.js';
 
 export class ScoutError extends Error {
     override name = 'ScoutError';
 }
 
-export function handleError(error: unknown, debug: boolean | undefined): never {
+export function handleError(error: unknown, debug: boolean | undefined, styleError: Style): never {
     if (error instanceof ScoutError) {
-        console.error(error.message);
+        console.error(styleError(error.message));
         if (debug && error.cause) {
             console.error('\nCause:');
             if (error.cause instanceof z.ZodError) {

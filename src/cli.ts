@@ -29,6 +29,7 @@ Flags:
   -e, --email <address>   Look up info for an email address
       --json              Print results as JSON
       --debug             Print full error details on failure
+      --no-color          Print results without colors
   -h, --help              Show this help
 `.trim();
 
@@ -42,6 +43,7 @@ export function parseCliArgs() {
                 json: { type: 'boolean' },
                 help: { type: 'boolean', short: 'h' },
                 debug: { type: 'boolean' },
+                'no-color': {type: 'boolean' },
             },
             allowPositionals: true,
         });

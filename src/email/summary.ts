@@ -1,5 +1,6 @@
 import { type DomainSummary, domainRows } from '../domain/summary.js';
 import { type ParsedEmail } from './parse.js';
+import { type Row } from '../output.js';
 
 export interface EmailSummary {
     email: string;
@@ -18,11 +19,13 @@ export function summarizeEmail(parsed: ParsedEmail, domain: DomainSummary): Emai
     return { ...parsed, freeProvider, domain };
 }
 
-export function emailRows(summary: EmailSummary): [string, string][] {
-    const domainPart = domainRows(summary.domain).filter(([label]) => EMAIL_DOMAIN_LABELS.has(label));
+export function emailRows(summary: EmailSummary): Row[] {
+    const domainPart = domainRows(summary.domain)
+        .filter(([label]) => EMAIL_DOMAIN_LABELS.has(label))
+        .map(([label, value, kind]): Row => kind === 'title' ? [label, value] : [label, value, kind] );
 
     return [
-        ['Email', summary.email],
+        ['Email', summary.email, 'title'],
         ['Provider', summary.freeProvider ? 'free email provider' : 'not a free email provider'],
         ...domainPart
     ];

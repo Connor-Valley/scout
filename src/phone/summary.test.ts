@@ -60,7 +60,7 @@ describe('phoneRows', () => {
       const rows = phoneRows(baseSummary);
 
       expect(rows).toEqual([
-          ['Input', '+1 502 555 5555'],
+          ['Input', '+1 502 555 5555', 'title'],
           ['Country', 'US'],
           ['National', '(502) 555-5555'],
           ['International', '+1 502 555 5555'],
@@ -83,14 +83,14 @@ describe('phoneRows', () => {
        const rows = phoneRows(summary);
 
        expect(rows).toEqual([
-           ['Input', '+1 502 555 5555'],
-           ['Country', 'no country found'],
+           ['Input', '+1 502 555 5555', 'title'],
+           ['Country', 'no country found', 'missing'],
            ['National', '(502) 555-5555'],
            ['International', '+1 502 555 5555'],
            ['E164', '+15025555555'],
            ['Possible', 'No'],
            ['Valid', 'No'],
-           ['Type', 'no type found']
+           ['Type', 'no type found', 'missing']
        ]);
    })
 });

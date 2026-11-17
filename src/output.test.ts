@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatRows } from './output.js';
+import { formatRows, type RowStyles, type Row } from './output.js';
 
 describe('formatRows', () => {
     it('lines up values 2 spaces after longest label', () => {
@@ -30,6 +30,26 @@ describe('formatRows', () => {
 
         expect(formattedRows).toEqual([
             'test  a, b, c'
+        ]);
+    });
+
+    it('applies label, title and missing styles to the right parts', () => {
+        const marks: RowStyles = {
+            label: (s) => `[L]${s}`,
+            title: (s) => `<b>${s}</b>`,
+            missing: (s) => `<dim>${s}</dim>`,
+        };
+
+        const rows: Row[] = [
+            ['Domain', 'google.com', 'title'],
+            ['Expires', '2028-09-14'],
+            ['IPv6', 'no IPv6 found', 'missing'],
+        ];
+
+        expect(formatRows(rows, marks)).toEqual([
+            '[L]Domain   <b>google.com</b>',
+            '[L]Expires  2028-09-14',
+            '[L]IPv6     <dim>no IPv6 found</dim>',
         ]);
     });
 });

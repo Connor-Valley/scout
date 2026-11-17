@@ -54,7 +54,7 @@ describe('emailRows', () => {
         const rows = emailRows(baseSummary);
 
         expect(rows).toEqual([
-            ['Email', 'billing@example.com'],
+            ['Email', 'billing@example.com', 'title'],
             ['Provider', 'not a free email provider'],
             ['Domain', 'example.com'],
             ['Registered', '2010-05-01 (15 years ago)'],
